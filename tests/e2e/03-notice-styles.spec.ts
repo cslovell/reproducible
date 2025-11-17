@@ -72,7 +72,9 @@ test.describe('Notice Styles', () => {
     test('should not have title in DOM', async ({ page }) => {
       await page.goto('file://' + path.resolve(__dirname, '../../test-outputs/minimal-style.html'));
 
-      const title = page.getByText(DEFAULT_CONFIG.ui.noticeTitle);
+      // Specifically check within the notice div for the title
+      const notice = page.locator('.reproducible-notice.minimal');
+      const title = notice.locator('strong').filter({ hasText: DEFAULT_CONFIG.ui.noticeTitle });
       await expect(title).toHaveCount(0);
     });
   });

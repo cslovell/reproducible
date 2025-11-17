@@ -102,7 +102,7 @@ local function normalize_version(version_str)
 end
 
 -- Build Onyxia deep-link URL
-local function build_onyxia_url(meta, config)
+local function build_onyxia_url(meta, config, validated_tier)
   -- Get Onyxia deployment settings from config
   local base_url = get_meta_string(config.onyxia, "base-url", "https://datalab.officialstatistics.org")
   local catalog = get_meta_string(config.onyxia, "catalog", "handbook")
@@ -115,7 +115,6 @@ local function build_onyxia_url(meta, config)
 
   -- Extract chapter metadata with precedence
   local chapter_name = extract_chapter_name(meta)
-  local tier = get_value(meta.reproducible, config, "tier", "medium")
   local image_flavor = get_value(meta.reproducible, config, "image-flavor", "base")
   local data_snapshot = get_value(meta.reproducible, config, "data-snapshot", "latest")
   local storage_size = get_value(meta.reproducible, config, "storage-size", "20Gi")
@@ -123,18 +122,11 @@ local function build_onyxia_url(meta, config)
   -- Normalize version
   local version_normalized = normalize_version(data_snapshot)
 
-  -- Validate tier
-  local valid_tiers = {light = true, medium = true, heavy = true, gpu = true}
-  if not valid_tiers[tier] then
-    quarto.log.warning("Invalid tier: " .. tier .. ", using 'medium'")
-    tier = "medium"
-  end
-
-  -- Build parameters
+  -- Build parameters (use validated_tier passed from Meta())
   local params = {
     "autoLaunch=" .. tostring(auto_launch),
     "name=" .. encode_helm_value("chapter-" .. chapter_name),
-    "tier=" .. encode_helm_value(tier),
+    "tier=" .. encode_helm_value(validated_tier),
     "imageFlavor=" .. encode_helm_value(image_flavor),
     "chapter.name=" .. encode_helm_value(chapter_name),
     "chapter.version=" .. encode_helm_value(version_normalized),
@@ -145,7 +137,7 @@ local function build_onyxia_url(meta, config)
 end
 
 -- Generate HTML button markup based on notice style
-local function generate_button_html(url, meta, config)
+local function generate_button_html(url, meta, config, validated_tier)
   -- Get UI configuration
   local button_text = get_meta_string(meta.reproducible, "button-text")
                    or get_meta_string(config.ui, "button-text", "Launch Environment")
@@ -161,8 +153,7 @@ local function generate_button_html(url, meta, config)
   local text_color = get_meta_string(config.branding, "text-color", "rgb(44, 50, 63)")
   local bg_color = get_meta_string(config.branding, "background-color", "#fafafa")
 
-  -- Get tier information for metadata display
-  local tier = get_value(meta.reproducible, config, "tier", "medium")
+  -- Get other metadata (use validated_tier passed from Meta())
   local estimated_runtime = get_value(meta.reproducible, config, "estimated-runtime", "Unknown")
 
   -- Get tier label (with built-in fallbacks)
@@ -173,9 +164,9 @@ local function generate_button_html(url, meta, config)
     gpu = "GPU (8 CPU, 32GB RAM, 1 GPU)"
   }
 
-  local tier_label = get_meta_string(config.tier_labels, tier)
-                  or default_tier_labels[tier]
-                  or tier
+  local tier_label = get_meta_string(config.tier_labels, validated_tier)
+                  or default_tier_labels[validated_tier]
+                  or validated_tier
 
   -- Build metadata text
   local metadata_parts = {tier_label}
@@ -258,11 +249,19 @@ function Meta(meta)
   -- Get configuration
   local config = get_config(meta)
 
-  -- Build URL
-  local url = build_onyxia_url(meta, config)
+  -- Extract and validate tier once (used by both URL and HTML generation)
+  local tier = get_value(meta.reproducible, config, "tier", "medium")
+  local valid_tiers = {light = true, medium = true, heavy = true, gpu = true}
+  if not valid_tiers[tier] then
+    quarto.log.warning("Invalid tier: " .. tier .. ", using 'medium'")
+    tier = "medium"
+  end
 
-  -- Generate HTML
-  local html = generate_button_html(url, meta, config)
+  -- Build URL with validated tier
+  local url = build_onyxia_url(meta, config, tier)
+
+  -- Generate HTML with validated tier
+  local html = generate_button_html(url, meta, config, tier)
 
   -- Inject into document (before body content)
   quarto.doc.include_text("before-body", html)
