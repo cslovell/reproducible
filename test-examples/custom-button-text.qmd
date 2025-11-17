@@ -1,0 +1,16 @@
+---
+title: "Custom Button Text Test"
+format: html
+reproducible:
+  enabled: true
+  button-text: "Start Analysis"
+---
+
+# Test Content
+
+This test verifies that button text can be customized at the document level.
+
+Expected behavior:
+- Button should say "Start Analysis" instead of default "Launch Environment"
+- URL should still be correct
+- All other elements use defaults

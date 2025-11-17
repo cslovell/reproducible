@@ -51,7 +51,7 @@ assert_contains() {
   local pattern=$2
   local description=$3
 
-  if grep -q "$pattern" "$file"; then
+  if grep -q -F "$pattern" "$file"; then
     echo -e "    ${GREEN}✓${NC} $description"
     ((PASSED++))
     return 0
@@ -70,7 +70,7 @@ assert_not_contains() {
   local pattern=$2
   local description=$3
 
-  if ! grep -q "$pattern" "$file"; then
+  if ! grep -q -F "$pattern" "$file"; then
     echo -e "    ${GREEN}✓${NC} $description"
     ((PASSED++))
     return 0

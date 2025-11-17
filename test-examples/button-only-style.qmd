@@ -1,0 +1,18 @@
+---
+title: "Button Only Style Test"
+format: html
+reproducible:
+  enabled: true
+  notice-style: "button-only"
+---
+
+# Test Content
+
+This test verifies the "button-only" style (just the button, no wrapper).
+
+Expected behavior:
+- Button appears
+- NO metadata (tier, runtime, etc.)
+- NO title wrapper
+- Has class "reproducible-button" (not "reproducible-notice")
+- Standalone link element

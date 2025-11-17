@@ -153,6 +153,60 @@ test_special_chars() {
     "Valid URL generated"
 }
 
+test_custom_button_text() {
+  echo -e "\n${YELLOW}Test 8: Custom button text${NC}"
+
+  local output=$(render_test "test-examples/custom-button-text.qmd")
+  if [ $? -ne 0 ]; then
+    ((FAILED++))
+    return 1
+  fi
+
+  assert_contains "$output" ">Start Analysis<" \
+    "Custom button text appears"
+
+  assert_not_contains "$output" ">Launch Environment<" \
+    "Default text not present"
+}
+
+test_minimal_style() {
+  echo -e "\n${YELLOW}Test 9: Minimal notice style${NC}"
+
+  local output=$(render_test "test-examples/minimal-style.qmd")
+  if [ $? -ne 0 ]; then
+    ((FAILED++))
+    return 1
+  fi
+
+  assert_contains "$output" 'class="reproducible-notice minimal"' \
+    "Minimal style class present"
+
+  assert_not_contains "$output" ">Reproducible Environment Available<" \
+    "No title in minimal style"
+
+  assert_contains "$output" "Medium (6 CPU, 24GB RAM)" \
+    "Metadata still present"
+}
+
+test_button_only_style() {
+  echo -e "\n${YELLOW}Test 10: Button-only style${NC}"
+
+  local output=$(render_test "test-examples/button-only-style.qmd")
+  if [ $? -ne 0 ]; then
+    ((FAILED++))
+    return 1
+  fi
+
+  assert_contains "$output" 'class="reproducible-button"' \
+    "Button-only class present"
+
+  assert_not_contains "$output" "Medium (6 CPU, 24GB RAM)" \
+    "No metadata in button-only style"
+
+  assert_not_contains "$output" ">Reproducible Environment Available<" \
+    "No title in button-only style"
+}
+
 # Main test runner
 run_tests() {
   echo "======================================"
@@ -171,6 +225,9 @@ run_tests() {
   test_custom_tier
   test_invalid_tier
   test_special_chars
+  test_custom_button_text
+  test_minimal_style
+  test_button_only_style
 
   # Summary
   echo ""

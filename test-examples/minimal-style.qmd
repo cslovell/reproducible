@@ -1,0 +1,17 @@
+---
+title: "Minimal Style Test"
+format: html
+reproducible:
+  enabled: true
+  notice-style: "minimal"
+---
+
+# Test Content
+
+This test verifies the "minimal" notice style (button + metadata, no title).
+
+Expected behavior:
+- Button appears
+- Metadata (tier, runtime, expiration) appears
+- NO title wrapper ("Reproducible Environment Available")
+- Has class "reproducible-notice minimal"

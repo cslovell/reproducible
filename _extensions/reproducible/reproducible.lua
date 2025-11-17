@@ -2,8 +2,21 @@
 -- Generates Onyxia deep-link buttons for launching reproducible sessions
 
 -- ============================================
--- HELPER FUNCTIONS
+-- CONFIGURATION & HELPER FUNCTIONS
 -- ============================================
+
+-- Get configuration with fallback chain: document > project > extension defaults
+local function get_config(meta)
+  local config = meta["reproducible-config"] or {}
+
+  return {
+    onyxia = config.onyxia or {},
+    ui = config.ui or {},
+    branding = config.branding or {},
+    tier_labels = config["tier-labels"] or {},
+    defaults = config.defaults or {}
+  }
+end
 
 -- Encode values for Onyxia URL parameters
 -- Numbers/booleans pass as-is, strings are URL-encoded and wrapped in «»
@@ -44,6 +57,17 @@ local function get_meta_string(meta, key, default)
   return default
 end
 
+-- Get value with precedence: document > config.defaults > fallback
+local function get_value(doc_meta, config, key, fallback)
+  local value = get_meta_string(doc_meta, key)
+  if value then return value end
+
+  value = get_meta_string(config.defaults, key)
+  if value then return value end
+
+  return fallback
+end
+
 -- Extract chapter name from filename
 local function extract_chapter_name(meta)
   -- Option 1: Explicit override
@@ -78,15 +102,23 @@ local function normalize_version(version_str)
 end
 
 -- Build Onyxia deep-link URL
-local function build_onyxia_url(meta)
-  local base_url = "https://datalab.officialstatistics.org/launcher/handbook/chapter-session"
+local function build_onyxia_url(meta, config)
+  -- Get Onyxia deployment settings from config
+  local base_url = get_meta_string(config.onyxia, "base-url", "https://datalab.officialstatistics.org")
+  local catalog = get_meta_string(config.onyxia, "catalog", "handbook")
+  local chart = get_meta_string(config.onyxia, "chart", "chapter-session")
+  local auto_launch = config.onyxia["auto-launch"]
+  if auto_launch == nil then auto_launch = true end
 
-  -- Extract metadata with defaults
+  -- Build launcher URL
+  local launcher_url = base_url .. "/launcher/" .. catalog .. "/" .. chart
+
+  -- Extract chapter metadata with precedence
   local chapter_name = extract_chapter_name(meta)
-  local tier = get_meta_string(meta.reproducible, "tier", "medium")
-  local image_flavor = get_meta_string(meta.reproducible, "image-flavor", "base")
-  local data_snapshot = get_meta_string(meta.reproducible, "data-snapshot", "latest")
-  local storage_size = get_meta_string(meta.reproducible, "storage-size", "20Gi")
+  local tier = get_value(meta.reproducible, config, "tier", "medium")
+  local image_flavor = get_value(meta.reproducible, config, "image-flavor", "base")
+  local data_snapshot = get_value(meta.reproducible, config, "data-snapshot", "latest")
+  local storage_size = get_value(meta.reproducible, config, "storage-size", "20Gi")
 
   -- Normalize version
   local version_normalized = normalize_version(data_snapshot)
@@ -100,7 +132,7 @@ local function build_onyxia_url(meta)
 
   -- Build parameters
   local params = {
-    "autoLaunch=true",
+    "autoLaunch=" .. tostring(auto_launch),
     "name=" .. encode_helm_value("chapter-" .. chapter_name),
     "tier=" .. encode_helm_value(tier),
     "imageFlavor=" .. encode_helm_value(image_flavor),
@@ -109,37 +141,90 @@ local function build_onyxia_url(meta)
     "chapter.storageSize=" .. encode_helm_value(storage_size)
   }
 
-  return base_url .. "?" .. table.concat(params, "&")
+  return launcher_url .. "?" .. table.concat(params, "&")
 end
 
--- Generate HTML button markup
-local function generate_button_html(url, reproducible_meta)
-  local tier = get_meta_string(reproducible_meta, "tier", "medium")
-  local estimated_runtime = get_meta_string(reproducible_meta, "estimated-runtime", "Unknown")
+-- Generate HTML button markup based on notice style
+local function generate_button_html(url, meta, config)
+  -- Get UI configuration
+  local button_text = get_meta_string(meta.reproducible, "button-text")
+                   or get_meta_string(config.ui, "button-text", "Launch Environment")
+  local notice_title = get_meta_string(config.ui, "notice-title", "Reproducible Environment Available")
+  local notice_style = get_meta_string(meta.reproducible, "notice-style")
+                    or get_meta_string(config.ui, "notice-style", "full")
+  local session_duration = get_meta_string(config.ui, "session-duration", "2h")
+  local show_runtime = config.ui["show-runtime"]
+  if show_runtime == nil then show_runtime = true end
 
-  -- Tier labels (display only - actual resources defined in Helm chart)
-  local tier_labels = {
-    light = "Light (2 CPU, 8GB RAM)",
-    medium = "Medium (6 CPU, 24GB RAM)",
-    heavy = "Heavy (10 CPU, 48GB RAM)",
-    gpu = "GPU (8 CPU, 32GB RAM, 1 GPU)"
-  }
+  -- Get branding
+  local primary_color = get_meta_string(config.branding, "primary-color", "rgb(255, 86, 44)")
+  local text_color = get_meta_string(config.branding, "text-color", "rgb(44, 50, 63)")
+  local bg_color = get_meta_string(config.branding, "background-color", "#fafafa")
 
-  local tier_label = tier_labels[tier] or tier_labels["medium"]
+  -- Get tier information for metadata display
+  local tier = get_value(meta.reproducible, config, "tier", "medium")
+  local estimated_runtime = get_value(meta.reproducible, config, "estimated-runtime", "Unknown")
 
-  return string.format([[
-<div class="reproducible-banner" style="background: #e3f2fd; padding: 15px; margin: 20px 0; border-radius: 5px; border-left: 4px solid #1976d2;">
-  <a href="%s"
-     target="_blank"
-     class="btn btn-primary"
-     style="background: #1976d2; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold;">
-    🚀 Reproduce this analysis
-  </a>
-  <span class="metadata" style="margin-left: 15px; color: #555; font-size: 0.9em;">
-    Resources: %s | Estimated runtime: %s | Session expires after 2 hours
-  </span>
+  -- Get tier label
+  local tier_label = get_meta_string(config.tier_labels, tier, tier)
+
+  -- Build metadata text
+  local metadata_parts = {tier_label}
+  if show_runtime then
+    table.insert(metadata_parts, "Est. runtime: " .. estimated_runtime)
+  end
+  table.insert(metadata_parts, "Auto-expires: " .. session_duration)
+  local metadata_text = table.concat(metadata_parts, " • ")
+
+  -- Generate HTML based on notice style
+  if notice_style == "button-only" then
+    -- Just the button, no wrapper
+    return string.format([[
+<a href="%s"
+   target="_blank"
+   class="reproducible-button"
+   style="background: %s; color: white; padding: 6px 14px; text-decoration: none; border-radius: 3px; font-size: 0.9rem; font-weight: 500; display: inline-block; margin: 20px 0;">
+  %s
+</a>
+]], url, primary_color, button_text)
+
+  elseif notice_style == "minimal" then
+    -- Button + metadata, no title
+    return string.format([[
+<div class="reproducible-notice minimal" style="border-left: 3px solid %s; background: %s; padding: 12px 16px; margin: 20px 0 30px 0; font-size: 0.95rem; color: %s;">
+  <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+    <a href="%s"
+       target="_blank"
+       style="background: %s; color: white; padding: 6px 14px; text-decoration: none; border-radius: 3px; font-size: 0.9rem; font-weight: 500; display: inline-block;">
+      %s
+    </a>
+    <span style="color: #666; font-size: 0.85rem;">
+      %s
+    </span>
+  </div>
 </div>
-]], url, tier_label, estimated_runtime)
+]], primary_color, bg_color, text_color, url, primary_color, button_text, metadata_text)
+
+  else
+    -- "full" style (default) - Title + button + metadata
+    return string.format([[
+<div class="reproducible-notice full" style="border-left: 3px solid %s; background: %s; padding: 12px 16px; margin: 20px 0 30px 0; font-size: 0.95rem; color: %s;">
+  <div style="margin-bottom: 6px;">
+    <strong>%s</strong>
+  </div>
+  <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+    <a href="%s"
+       target="_blank"
+       style="background: %s; color: white; padding: 6px 14px; text-decoration: none; border-radius: 3px; font-size: 0.9rem; font-weight: 500; display: inline-block;">
+      %s
+    </a>
+    <span style="color: #666; font-size: 0.85rem;">
+      %s
+    </span>
+  </div>
+</div>
+]], primary_color, bg_color, text_color, notice_title, url, primary_color, button_text, metadata_text)
+  end
 end
 
 -- ============================================
@@ -161,11 +246,14 @@ function Meta(meta)
     return meta
   end
 
+  -- Get configuration
+  local config = get_config(meta)
+
   -- Build URL
-  local url = build_onyxia_url(meta)
+  local url = build_onyxia_url(meta, config)
 
   -- Generate HTML
-  local html = generate_button_html(url, meta.reproducible)
+  local html = generate_button_html(url, meta, config)
 
   -- Inject into document (before body content)
   quarto.doc.include_text("before-body", html)
