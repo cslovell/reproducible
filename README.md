@@ -18,7 +18,9 @@ This extension enables handbook authors to add reproducibility to their chapters
 
 ### Installation
 
-Install the extension in your Quarto project:
+**Step 1: Install the extension**
+
+Install in your Quarto project:
 
 ```bash
 quarto add un-handbook/reproducible
@@ -30,7 +32,25 @@ Or install from a local directory:
 quarto add path/to/reproducible
 ```
 
+**Step 2: Activate the filter**
+
+Add the filter to your project's `_quarto.yml`:
+
+```yaml
+project:
+  type: book  # or website, default, etc.
+
+filters:
+  - reproducible
+
+format:
+  html:
+    theme: cosmo
+```
+
 ### Basic Usage
+
+**Step 3: Enable in your chapters**
 
 Add this to your chapter's YAML frontmatter:
 
