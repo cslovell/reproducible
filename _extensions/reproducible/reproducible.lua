@@ -165,8 +165,17 @@ local function generate_button_html(url, meta, config)
   local tier = get_value(meta.reproducible, config, "tier", "medium")
   local estimated_runtime = get_value(meta.reproducible, config, "estimated-runtime", "Unknown")
 
-  -- Get tier label
-  local tier_label = get_meta_string(config.tier_labels, tier, tier)
+  -- Get tier label (with built-in fallbacks)
+  local default_tier_labels = {
+    light = "Light (2 CPU, 8GB RAM)",
+    medium = "Medium (6 CPU, 24GB RAM)",
+    heavy = "Heavy (10 CPU, 48GB RAM)",
+    gpu = "GPU (8 CPU, 32GB RAM, 1 GPU)"
+  }
+
+  local tier_label = get_meta_string(config.tier_labels, tier)
+                  or default_tier_labels[tier]
+                  or tier
 
   -- Build metadata text
   local metadata_parts = {tier_label}
