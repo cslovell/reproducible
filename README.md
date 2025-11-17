@@ -1,41 +1,42 @@
 # Reproducible Analysis Button - Quarto Extension
 
-A Quarto extension that generates "Reproduce this analysis" buttons for launching one-click, pre-configured JupyterLab environments on the UN Global Platform (Onyxia).
+A Quarto extension that generates "Reproducible Environment" buttons for launching one-click, pre-configured JupyterLab environments on Onyxia platforms (such as the UN Global Platform).
+
+**Version:** 0.2.0
+**Requirements:** Quarto >= 1.3.0
 
 ## Overview
 
-This extension enables handbook authors to add a single line of YAML to their chapters, which automatically generates a prominent button that readers can click to launch a reproducible computing environment with all code, data, and dependencies ready to use.
+This extension enables handbook authors to add reproducibility to their chapters by including a single YAML configuration. When enabled, a button is automatically generated that readers can click to launch a fully-configured computing environment with all code, data, and dependencies ready to use.
 
-**For Readers**: One click → JupyterLab ready in 15 seconds
-**For Authors**: Add `reproducible: enabled: true` → Done
+**For Readers:** One click launches a JupyterLab session in 5-15 seconds
+**For Authors:** Add `reproducible: enabled: true` to your YAML frontmatter
 
-## Installation
+---
 
-### From GitHub (Recommended)
+## Quick Start
+
+### Installation
+
+Install the extension in your Quarto project:
 
 ```bash
 quarto add un-handbook/reproducible
 ```
 
-### Local Development
+Or install from a local directory:
 
 ```bash
-# Clone this repository
-git clone https://github.com/un-handbook/reproducible.git
-
-# Use in your project
 quarto add path/to/reproducible
 ```
 
-## Quick Start
+### Basic Usage
 
 Add this to your chapter's YAML frontmatter:
 
 ```yaml
 ---
 title: "Your Chapter Title"
-filters:
-  - reproducible
 reproducible:
   enabled: true
 ---
@@ -43,204 +44,652 @@ reproducible:
 # Your content here...
 ```
 
-That's it! When rendered, a button will appear at the top of your chapter.
+When rendered to HTML, a notice will appear at the top of the chapter with a button to launch the reproducible environment.
 
-## Configuration Options
+---
 
-### Minimal (Recommended)
+## Configuration
+
+The extension supports three levels of configuration with a clear precedence hierarchy:
+
+**Precedence:** Document > Project > Extension defaults
+
+### Level 1: Extension Defaults
+
+The extension provides sensible defaults for the UN Global Platform deployment. No configuration is required for basic usage.
+
+Default settings include:
+- Onyxia URL: `https://datalab.officialstatistics.org`
+- Helm catalog: `handbook`
+- Helm chart: `chapter-session`
+- Button text: "Launch Environment"
+- Notice style: Full (title + button + metadata)
+- Branding: Onyxia colors (orange/black)
+
+### Level 2: Project-Level Configuration
+
+Configure deployment-wide settings in your project's `_quarto.yml` file using the `reproducible-config` namespace. This is useful for:
+- Deploying to a different Onyxia instance
+- Customizing branding and UI text
+- Setting different default values
+
+**Example: Custom Onyxia Instance**
 
 ```yaml
-reproducible:
-  enabled: true
+# _quarto.yml
+project:
+  type: book
+
+filters:
+  - reproducible
+
+reproducible-config:
+  onyxia:
+    base-url: "https://onyxia.example.org"
+    catalog: "custom-catalog"
+    chart: "analysis-environment"
+
+  ui:
+    button-text: "Launch Analysis"
+    notice-style: "minimal"
 ```
 
-Uses smart defaults:
-- Tier: `medium` (6 CPU, 24GB RAM)
-- Image flavor: `base` (R + Python + geospatial libraries)
-- Storage: `20Gi`
-
-### Full Options
+**Example: Custom Branding**
 
 ```yaml
+reproducible-config:
+  branding:
+    primary-color: "#0066cc"
+    text-color: "#333333"
+    background-color: "#f5f5f5"
+
+  ui:
+    notice-title: "Interactive Environment Available"
+    session-duration: "4h"
+```
+
+### Level 3: Document-Level Configuration
+
+Configure chapter-specific settings in individual `.qmd` files using the `reproducible` namespace.
+
+**Minimal Configuration:**
+
+```yaml
+---
+title: "Chapter Title"
 reproducible:
   enabled: true
-  tier: heavy              # light | medium | heavy | gpu
-  image-flavor: gpu        # base | gpu
-  data-snapshot: v1.2.3    # Auto-updated by CI
+---
+```
+
+**Full Configuration:**
+
+```yaml
+---
+title: "Chapter Title"
+reproducible:
+  enabled: true
+
+  # Resource configuration
+  tier: heavy                      # light | medium | heavy | gpu
+  image-flavor: gpu                # base | gpu
+  data-snapshot: v1.2.3            # Version tag
+  storage-size: "50Gi"             # Storage request
+  estimated-runtime: "45 minutes"  # Display text
+
+  # UI overrides (optional)
+  button-text: "Launch Tutorial"   # Override button text
+  notice-style: "button-only"      # full | minimal | button-only
+---
+```
+
+---
+
+## Configuration Reference
+
+### Onyxia Deployment Settings
+
+Configure in `_quarto.yml` under `reproducible-config.onyxia`:
+
+| Setting | Type | Default | Description |
+|---------|------|---------|-------------|
+| `base-url` | string | `https://datalab.officialstatistics.org` | Onyxia instance URL (no trailing slash) |
+| `catalog` | string | `handbook` | Helm chart catalog name |
+| `chart` | string | `chapter-session` | Helm chart name |
+| `auto-launch` | boolean | `true` | Pre-fill autoLaunch parameter |
+
+### UI Customization
+
+Configure in `_quarto.yml` under `reproducible-config.ui`:
+
+| Setting | Type | Default | Description |
+|---------|------|---------|-------------|
+| `button-text` | string | `Launch Environment` | Text displayed on button |
+| `notice-title` | string | `Reproducible Environment Available` | Title of notice wrapper |
+| `notice-style` | enum | `full` | Display style (see below) |
+| `session-duration` | string | `2h` | Session expiration display text |
+| `show-runtime` | boolean | `true` | Show/hide estimated runtime |
+
+**Notice Styles:**
+
+- `full` - Title + button + metadata (default)
+- `minimal` - Button + metadata, no title
+- `button-only` - Just the button, no wrapper or metadata
+
+### Branding
+
+Configure in `_quarto.yml` under `reproducible-config.branding`:
+
+| Setting | Type | Default | Description |
+|---------|------|---------|-------------|
+| `primary-color` | string | `rgb(255, 86, 44)` | Button and border color |
+| `text-color` | string | `rgb(44, 50, 63)` | Text color in notice |
+| `background-color` | string | `#fafafa` | Notice background color |
+
+### Resource Tier Labels
+
+Configure in `_quarto.yml` under `reproducible-config.tier-labels`:
+
+These are display-only labels. Actual resource allocations are defined in the Helm chart.
+
+| Tier | Default Label |
+|------|---------------|
+| `light` | Light (2 CPU, 8GB RAM) |
+| `medium` | Medium (6 CPU, 24GB RAM) |
+| `heavy` | Heavy (10 CPU, 48GB RAM) |
+| `gpu` | GPU (8 CPU, 32GB RAM, 1 GPU) |
+
+### Default Chapter Values
+
+Configure in `_quarto.yml` under `reproducible-config.defaults`:
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `tier` | `medium` | Default resource tier |
+| `image-flavor` | `base` | Default container image |
+| `data-snapshot` | `latest` | Default version tag |
+| `storage-size` | `20Gi` | Default storage request |
+| `estimated-runtime` | `Unknown` | Default runtime estimate |
+
+### Document-Level Settings
+
+Configure in `.qmd` frontmatter under `reproducible`:
+
+| Setting | Type | Required | Description |
+|---------|------|----------|-------------|
+| `enabled` | boolean | Yes | Show button or not |
+| `tier` | enum | No | Resource tier (light, medium, heavy, gpu) |
+| `image-flavor` | string | No | Container image variant |
+| `data-snapshot` | string | No | Chapter version/snapshot |
+| `storage-size` | string | No | Storage request (e.g., "50Gi") |
+| `estimated-runtime` | string | No | Runtime estimate display |
+| `chapter-name` | string | No | Override filename-based name |
+| `button-text` | string | No | Override button text for this chapter |
+| `notice-style` | enum | No | Override notice style for this chapter |
+
+---
+
+## Common Use Cases
+
+### Use Case 1: Simple Book with Defaults
+
+**Goal:** Add reproducibility to chapters using default UN Global Platform settings.
+
+**Setup (_quarto.yml):**
+```yaml
+project:
+  type: book
+
+filters:
+  - reproducible
+```
+
+**Chapter (chapter.qmd):**
+```yaml
+---
+title: "My Chapter"
+reproducible:
+  enabled: true
+---
+```
+
+**Result:** Full notice with default button and Onyxia orange branding.
+
+---
+
+### Use Case 2: Custom Deployment
+
+**Goal:** Deploy handbook to a different Onyxia instance with custom branding.
+
+**Setup (_quarto.yml):**
+```yaml
+project:
+  type: book
+
+filters:
+  - reproducible
+
+reproducible-config:
+  onyxia:
+    base-url: "https://onyxia.stats-france.org"
+    catalog: "formation"
+    chart: "jupyter-session"
+
+  branding:
+    primary-color: "#003366"
+
+  ui:
+    button-text: "Lancer l'environnement"
+    notice-title: "Environnement reproductible disponible"
+```
+
+**Chapter:**
+```yaml
+---
+title: "Chapitre 1"
+reproducible:
+  enabled: true
+---
+```
+
+**Result:** Button points to French instance with French text and custom blue color.
+
+---
+
+### Use Case 3: Mixed Notice Styles
+
+**Goal:** Use full notices for main chapters, minimal style for appendices.
+
+**Setup (_quarto.yml):**
+```yaml
+reproducible-config:
+  ui:
+    notice-style: "full"  # Default
+```
+
+**Main Chapter:**
+```yaml
+---
+title: "Core Analysis"
+reproducible:
+  enabled: true
+  # Uses default "full" style
+---
+```
+
+**Appendix:**
+```yaml
+---
+title: "Appendix: Code Examples"
+reproducible:
+  enabled: true
+  notice-style: "button-only"  # Override for minimal appearance
+---
+```
+
+---
+
+### Use Case 4: Different Resource Tiers
+
+**Goal:** Assign appropriate compute resources to different chapters.
+
+**Theory Chapter:**
+```yaml
+---
+title: "Introduction to Remote Sensing"
+reproducible:
+  enabled: true
+  tier: light
+  estimated-runtime: "5 minutes"
+---
+```
+
+**Analysis Chapter:**
+```yaml
+---
+title: "Crop Classification with Random Forest"
+reproducible:
+  enabled: true
+  tier: heavy
   estimated-runtime: "45 minutes"
   storage-size: "50Gi"
+---
 ```
 
-## Available Resource Tiers
+**Deep Learning Chapter:**
+```yaml
+---
+title: "Yield Prediction with Neural Networks"
+reproducible:
+  enabled: true
+  tier: gpu
+  image-flavor: gpu
+  estimated-runtime: "2 hours"
+  storage-size: "100Gi"
+---
+```
 
-| Tier | CPU | RAM | GPU | Use Case |
-|------|-----|-----|-----|----------|
-| `light` | 2 | 8GB | - | Theory chapters, small examples |
-| `medium` | 6 | 24GB | - | Crop type mapping, Random Forest (default) |
-| `heavy` | 10 | 48GB | - | Large-scale classification, SAR preprocessing |
-| `gpu` | 8 | 32GB | 1 | Deep learning models (subject to availability) |
-
-**Note**: Resource allocations are defined in the Helm chart, not here. These are semantic labels that allow infrastructure changes without re-rendering content.
+---
 
 ## How It Works
 
-### For Readers
+### URL Generation
 
-1. **Click** the "🚀 Reproduce this analysis" button
-2. **Redirected** to Onyxia launcher with pre-filled parameters
-3. **Launch** session (auto-starts with one click)
-4. **Wait** 5-15 seconds for container to start
-5. **Work** in JupyterLab with all code, data, and credentials ready
+The extension generates Onyxia deep-link URLs that pre-fill all launch parameters:
 
-### For Authors
+```
+https://datalab.officialstatistics.org/launcher/handbook/chapter-session
+  ?autoLaunch=true
+  &tier=«medium»
+  &imageFlavor=«base»
+  &chapter.name=«chapter-name»
+  &chapter.version=«v1-0-0»
+  &chapter.storageSize=«20Gi»
+```
 
-1. **Add** YAML frontmatter to your chapter
-2. **Push** your data files to `data/<your_chapter>/`
-3. **CI automatically**:
-   - Builds immutable data artifacts
-   - Calculates SHA256 hashes
-   - Commits hashes back to your `.qmd`
-   - Renders the button in published chapter
+**URL Encoding Rules:**
+- Numbers: Pass as-is (e.g., `5`)
+- Booleans: Pass as-is (e.g., `true`)
+- Strings: URL-encoded and wrapped in `«»` (e.g., `«medium»`)
 
-No Docker, Kubernetes, or DevOps knowledge required.
+### Chapter Name Extraction
 
-## Technical Architecture
+The extension determines the chapter name using this priority:
+
+1. Explicit override: `chapter-name` in metadata
+2. Filename: Extract from `.qmd` filename (e.g., `ct_chile.qmd` → `ct_chile`)
+3. Title: Sanitized version of document title
+4. Fallback: `unknown-chapter`
+
+### Version Normalization
+
+Version strings are normalized for URL compatibility:
+- Dots converted to hyphens: `v1.2.3` → `v1-2-3`
+- Special characters URL-encoded
+
+---
+
+## Troubleshooting
+
+### Problem: Button doesn't appear
+
+**Possible causes:**
+
+1. **Feature not enabled**
+   - Solution: Ensure `reproducible: enabled: true` in frontmatter
+
+2. **Rendering to non-HTML format**
+   - Solution: Button only appears in HTML output (not PDF/DOCX)
+   - Check: `quarto render --to html`
+
+3. **Extension not installed**
+   - Solution: Run `quarto add un-handbook/reproducible`
+   - Verify: Check `_extensions/reproducible/` directory exists
+
+4. **Syntax error in YAML**
+   - Solution: Validate YAML formatting (proper indentation, colons, etc.)
+   - Check: Quarto render output for error messages
+
+### Problem: "Error in loadNamespace(x): there is no package called 'rmarkdown'"
+
+**Cause:** Quarto is trying to execute R code, but R packages aren't installed.
+
+**Solution:** Add `engine: markdown` to your YAML frontmatter:
+
+```yaml
+---
+title: "Chapter Title"
+engine: markdown
+reproducible:
+  enabled: true
+---
+```
+
+This tells Quarto to treat code blocks as literal markdown, not executable code.
+
+### Problem: Invalid tier warning
+
+**Symptom:** Console shows "Invalid tier: X, using 'medium'"
+
+**Cause:** Tier value is not one of: `light`, `medium`, `heavy`, `gpu`
+
+**Solution:** Check spelling and use valid tier names:
+
+```yaml
+reproducible:
+  enabled: true
+  tier: heavy  # Correct
+  # tier: super-heavy  # Invalid
+```
+
+### Problem: Button text contains HTML entities
+
+**Symptom:** Button shows `&lt;` instead of `<`
+
+**Cause:** Special characters in button text
+
+**Solution:** Quarto automatically escapes HTML. This is expected and safe. If you need literal HTML, consider using a different approach or simplified text.
+
+### Problem: URL looks wrong (contains `«»` characters)
+
+**This is correct behavior.** Onyxia requires string parameters to be wrapped in `«»` delimiters. The URL is properly formatted.
+
+**Example correct URL:**
+```
+...?tier=«medium»&chapter.name=«ct_chile»
+```
+
+### Problem: Custom configuration not working
+
+**Possible causes:**
+
+1. **Incorrect namespace**
+   - Project-level: Use `reproducible-config` in `_quarto.yml`
+   - Document-level: Use `reproducible` in `.qmd` frontmatter
+
+2. **Indentation error**
+   - YAML requires exact 2-space indentation
+   - Check: No tabs, proper nesting
+
+3. **Quarto not finding _quarto.yml**
+   - Ensure `_quarto.yml` is in project root
+   - Check: Render from correct directory
+
+**Debug steps:**
+
+1. Add debug output to check what Quarto sees:
+   ```bash
+   quarto render chapter.qmd --log-level debug
+   ```
+
+2. Check generated HTML:
+   ```bash
+   grep "reproducible" chapter.html
+   ```
+
+3. Verify extension version:
+   ```bash
+   cat _extensions/reproducible/_extension.yml | grep version
+   ```
+
+### Problem: Changes to _extension.yml not taking effect
+
+**Cause:** Quarto caches extension metadata
+
+**Solution:**
+
+1. Remove extension cache:
+   ```bash
+   rm -rf .quarto/
+   ```
+
+2. Re-render:
+   ```bash
+   quarto render
+   ```
+
+3. For persistent issues, reinstall extension:
+   ```bash
+   quarto remove reproducible
+   quarto add un-handbook/reproducible
+   ```
+
+---
+
+## Development & Testing
+
+### Running Tests
+
+The extension includes an end-to-end test suite:
+
+```bash
+cd reproducible/
+bash test.sh
+```
+
+This runs 10 test cases covering:
+- Basic configuration
+- Full metadata
+- Disabled chapters
+- Custom tiers
+- Invalid values
+- Custom button text
+- Notice style variants
+
+### Test Structure
+
+```
+test-examples/          # Test input files
+  ├── basic.qmd
+  ├── full-metadata.qmd
+  ├── disabled.qmd
+  ├── custom-button-text.qmd
+  └── ...
+test.sh                 # Test runner
+test-assertions.sh      # Assertion helpers
+test-outputs/           # Generated HTML (gitignored)
+```
+
+### Manual Testing
+
+Render the example document:
+
+```bash
+quarto render example.qmd
+open example.html
+```
+
+Verify:
+- Button appears at top of page
+- Button link is correct
+- Styling looks appropriate
+- Text is correct
+
+### Debugging Tips
+
+1. **View generated HTML:**
+   ```bash
+   quarto render chapter.qmd
+   cat chapter.html | grep -A 10 "reproducible"
+   ```
+
+2. **Check metadata merging:**
+   ```bash
+   quarto inspect chapter.qmd
+   ```
+
+3. **Enable Lua debugging:**
+   Add to your Lua filter:
+   ```lua
+   quarto.log.output(config)  -- Dump config to console
+   ```
+
+4. **Test with minimal example:**
+   Create a minimal test file to isolate issues
+
+---
+
+## Architecture & Technical Details
 
 ### Component in Broader System
 
 This extension is **Component #4** of a 5-component reproducible analysis system:
 
-**Build-Time**:
-1. Portable CI Pipeline (Dagger) - Builds images and data artifacts
+**Build-Time:**
+1. Portable CI Pipeline (Dagger) - Builds images and packages data
 2. Curated Compute Images - Pre-built Docker images
 3. OCI Data Artifacts - Content-hashed data snapshots
 
-**Run-Time**:
-4. **"Reproduce" Button (This Extension)** ← You are here
+**Run-Time:**
+4. **"Reproduce" Button (This Extension)** - User's entrypoint
 5. "Chapter Session" Helm Chart - Kubernetes deployment
 
 ### What This Extension Does
 
-- **Reads** `reproducible:` metadata from YAML frontmatter
-- **Generates** Onyxia deep-link URL with encoded parameters
-- **Injects** HTML button at top of rendered document
-- **Validates** configuration and provides warnings for invalid values
+- Reads `reproducible:` and `reproducible-config:` metadata
+- Generates Onyxia deep-link URL with encoded parameters
+- Injects HTML button/notice into rendered document
+- Validates configuration with warnings for invalid values
 
 ### What This Extension Does NOT Do
 
-- ❌ Build Docker images (done by CI)
-- ❌ Package data artifacts (done by CI)
-- ❌ Deploy Kubernetes sessions (done by Helm chart)
-- ❌ Hard-code infrastructure details (uses semantic tier names)
+- Build Docker images (done by CI pipeline)
+- Package data artifacts (done by CI pipeline)
+- Deploy Kubernetes sessions (done by Helm chart)
+- Hard-code infrastructure details (uses semantic tier names)
 
-## Development
+### Design Principles
 
-### Directory Structure
+**Decoupled Architecture:**
+- Frontend (Quarto) knows only semantic names (`tier: "heavy"`)
+- Backend (Helm chart) translates to actual resources (10 CPU, 48GB RAM)
+- Infrastructure changes don't require re-rendering the handbook
 
-```
-reproducible/
-├── _extensions/
-│   └── reproducible/
-│       ├── _extension.yml       # Extension metadata
-│       └── reproducible.lua     # Main filter logic
-├── test-examples/               # 7 test cases
-│   ├── basic.qmd
-│   ├── full-metadata.qmd
-│   ├── disabled.qmd
-│   └── ...
-├── test.sh                      # Test runner
-├── test-assertions.sh           # Test helpers
-├── example.qmd                  # Demo & manual test
-├── CLAUDE.md                    # Project notes
-├── USER_JOURNEY.md              # User experience spec
-├── IMPLEMENTATION_APPROACH.md   # Technical design
-├── EXTENSION_LEARNINGS.md       # Best practices
-└── TEST_STRATEGY.md             # TDD approach
-```
+**Backward Compatibility:**
+- Simple `enabled: true` configs continue to work
+- New configuration features are opt-in
+- Sensible defaults for all values
 
-### Running Tests
+**Fail Gracefully:**
+- Invalid config → warning + fallback to default
+- Missing config → use extension defaults
+- Never fail rendering due to config issues
 
-```bash
-# Run full test suite (7 test cases)
-bash test.sh
+---
 
-# Render example manually
-quarto render example.qmd
-open example.html
-```
+## Version History
 
-### Test-Driven Development
+### v0.2.0 (Current)
 
-This extension was built using TDD with end-to-end tests:
+- Added comprehensive configuration system
+- Support for three notice styles (full, minimal, button-only)
+- Configurable Onyxia deployment (URL, catalog, chart)
+- Customizable button text and branding
+- Project-level configuration via `reproducible-config`
+- Document-level UI overrides
+- 10 end-to-end tests
+- Full backward compatibility with v0.1.x
 
-1. **Write test** → `test-examples/basic.qmd` + assertions
-2. **Run test** → `bash test.sh` (fails initially)
-3. **Implement** → `reproducible.lua`
-4. **Run again** → Test passes
-5. **Refactor** → Improve code quality
-6. **Repeat** for next feature
+### v0.1.0
 
-See `TEST_STRATEGY.md` for details.
+- Initial proof-of-concept implementation
+- Basic button generation with hard-coded values
+- Document-level configuration only
+- Single notice style
+- 7 end-to-end tests
 
-### Adding New Features
-
-1. Write a new test in `test-examples/`
-2. Add test function to `test.sh`
-3. Run `bash test.sh` (should fail)
-4. Implement feature in `reproducible.lua`
-5. Run tests again (should pass)
-6. Update documentation
-
-## Documentation
-
-- **CLAUDE.md** - Project context, architecture, design decisions
-- **USER_JOURNEY.md** - "Magic" user experience for readers, authors, and infrastructure
-- **IMPLEMENTATION_APPROACH.md** - Technical strategy, Lua patterns, URL encoding
-- **EXTENSION_LEARNINGS.md** - Best practices from example extensions
-- **TEST_STRATEGY.md** - TDD approach, test cases, debugging
-
-## Requirements
-
-- Quarto >= 1.3.0 (for `pandoc.utils.stringify()` support)
-- Output format: `html` (button is hidden for PDF/DOCX)
-
-## Examples
-
-See `example.qmd` for a comprehensive demo with:
-- All configuration options explained
-- Resource tier comparison table
-- Code examples
-- Technical details about URL generation
-
-## Troubleshooting
-
-### Button doesn't appear
-
-- Check `reproducible: enabled: true` in frontmatter
-- Verify rendering to HTML (not PDF/DOCX)
-- Look for warnings in Quarto output
-
-### Invalid tier warning
-
-- Valid tiers: `light`, `medium`, `heavy`, `gpu`
-- Extension falls back to `medium` if invalid
-- Check for typos in tier name
-
-### URL looks wrong
-
-- URLs use special encoding: strings in `«»`, numbers as-is
-- This is correct! Onyxia requires this format
-- Test the URL by clicking it (should open Onyxia launcher)
+---
 
 ## Contributing
 
-This is part of the UN Handbook reproducible analysis system. For contributions:
+This extension is part of the UN Handbook reproducible analysis system. For issues or contributions:
 
-1. Fork the repository
-2. Create a feature branch
-3. Add tests for new functionality
-4. Ensure `bash test.sh` passes
-5. Submit pull request
+1. Report issues on GitHub
+2. Follow the test-driven development approach
+3. Ensure all tests pass before submitting
+4. Update documentation for new features
+
+---
 
 ## License
 
@@ -249,12 +698,19 @@ This is part of the UN Handbook reproducible analysis system. For contributions:
 ## Authors
 
 - UN Handbook Team
-- Based on research of `onyxia-quarto` and `quarto-open-social-comments` extensions
-
-## Version
-
-**v0.1.0** - Initial POC implementation
+- Based on research of onyxia-quarto and quarto-open-social-comments extensions
 
 ---
 
-**Status**: Proof of concept with test-driven development. Ready for integration testing with actual Onyxia instance.
+## Additional Resources
+
+- [Quarto Extensions Documentation](https://quarto.org/docs/extensions/)
+- [Onyxia Platform](https://onyxia.sh/)
+- [UN Global Platform](https://datalab.officialstatistics.org/)
+
+For questions about this extension, consult the documentation files:
+- `CLAUDE.md` - Project notes and architecture
+- `USER_JOURNEY.md` - User experience specifications
+- `IMPLEMENTATION_APPROACH.md` - Technical design details
+- `EXTENSION_LEARNINGS.md` - Best practices
+- `TEST_STRATEGY.md` - Testing approach
