@@ -1,0 +1,16 @@
+---
+title: "Disabled Test"
+format: html
+filters:
+  - ../reproducible
+reproducible:
+  enabled: false
+---
+
+# Test Content
+
+This chapter has reproducibility explicitly disabled.
+
+Expected behavior:
+- NO button should appear
+- Document renders normally without the extension

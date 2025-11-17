@@ -1,0 +1,233 @@
+---
+title: "Reproducible Analysis Button - Example"
+subtitle: "Demo of the Quarto Extension for UN Handbook"
+format: html
+filters:
+  - reproducible
+reproducible:
+  enabled: true
+  tier: medium
+  image-flavor: base
+  data-snapshot: v1.0.0
+  estimated-runtime: "20 minutes"
+  storage-size: "20Gi"
+---
+
+# Reproducible Analysis Button Extension
+
+This document demonstrates the reproducible analysis button extension for Quarto. When rendered, it displays a prominent "🚀 Reproduce this analysis" button that launches a pre-configured JupyterLab environment on the UN Global Platform (Onyxia).
+
+## How It Works
+
+The button is automatically generated from YAML frontmatter metadata. Above, you should see a blue banner with:
+
+- A button linking to the Onyxia launcher
+- Resource tier information (CPU, RAM)
+- Estimated runtime
+- Session expiration warning
+
+## Configuration
+
+### Minimal Configuration
+
+The simplest usage requires only enabling the feature:
+
+```yaml
+---
+reproducible:
+  enabled: true
+---
+```
+
+This uses smart defaults:
+- **Tier**: medium (6 CPU, 24GB RAM)
+- **Image flavor**: base (R + Python + geospatial libraries)
+- **Storage**: 20Gi
+
+### Full Configuration
+
+You can override all options:
+
+```yaml
+---
+reproducible:
+  enabled: true
+  tier: heavy              # light, medium, heavy, or gpu
+  image-flavor: gpu        # base or gpu
+  data-snapshot: v1.2.3    # Auto-updated by CI pipeline
+  estimated-runtime: "45 minutes"
+  storage-size: "50Gi"
+---
+```
+
+## Available Resource Tiers
+
+| Tier | CPU | RAM | GPU | Use Case |
+|------|-----|-----|-----|----------|
+| **light** | 2 | 8GB | - | Theory chapters, small examples |
+| **medium** | 6 | 24GB | - | Crop type mapping, Random Forest |
+| **heavy** | 10 | 48GB | - | Large-scale classification, SAR preprocessing |
+| **gpu** | 8 | 32GB | 1 | Deep learning models (subject to availability) |
+
+**Note**: Actual resource allocations are defined in the Helm chart, not in the Quarto extension. These labels are semantic - infrastructure changes don't require re-rendering the book.
+
+## What Happens When You Click?
+
+1. **Redirect to Onyxia**: Browser navigates to the UN Global Platform launcher
+2. **Pre-filled Parameters**: All configuration (tier, chapter name, version) is pre-populated in the URL
+3. **One-Click Launch**: With `autoLaunch=true`, the session starts immediately
+4. **Fast Startup**: 5-15 seconds to running JupyterLab (via container image caching)
+5. **Pre-configured Environment**:
+   - All R/Python packages installed
+   - Chapter code and data loaded
+   - AWS credentials injected (for STAC queries)
+
+## Technical Details
+
+### URL Structure
+
+The extension generates Onyxia deep-link URLs like:
+
+```
+https://datalab.officialstatistics.org/launcher/handbook/chapter-session
+  ?autoLaunch=true
+  &tier=«medium»
+  &imageFlavor=«base»
+  &chapter.name=«example»
+  &chapter.version=«v1-0-0»
+  &chapter.storageSize=«20Gi»
+```
+
+### Encoding Rules
+
+- **Numbers**: Pass as-is (e.g., `5`)
+- **Booleans**: Pass as-is (e.g., `true`)
+- **Strings**: URL-encoded and wrapped in `«»` (e.g., `«medium»`)
+
+### Chapter Name Extraction
+
+The extension automatically extracts the chapter name from:
+
+1. **Explicit override**: `chapter-name:` in metadata
+2. **Filename**: `ct_chile.qmd` → `ct_chile`
+3. **Title**: Sanitized version of document title
+
+## Code Example
+
+Here's sample R code that would run in the reproducible environment:
+
+```{r}
+#| eval: false
+
+# Load geospatial libraries (pre-installed in environment)
+library(sits)
+library(terra)
+library(sf)
+
+# Access satellite data via STAC (automatic AWS credentials)
+cube <- sits_cube(
+  source = "AWS",
+  collection = "sentinel-2-l2a",
+  tiles = "20LLQ",
+  bands = c("B02", "B03", "B04", "B08"),
+  start_date = "2023-01-01",
+  end_date = "2023-12-31"
+)
+
+# Load pre-packaged training data (from data snapshot)
+training_samples <- readRDS("data/training_points.rds")
+
+# Train classification model
+rf_model <- sits_train(training_samples, sits_rfor())
+
+# Classify the cube
+classified <- sits_classify(cube, rf_model)
+
+# Visualize results
+plot(classified)
+```
+
+## For Chapter Authors
+
+### Enable Reproducibility
+
+Add this to your chapter's YAML frontmatter:
+
+```yaml
+---
+title: "Your Chapter Title"
+reproducible:
+  enabled: true
+---
+```
+
+That's it! The CI pipeline handles:
+- ✅ Building immutable data artifacts
+- ✅ Calculating SHA256 hashes
+- ✅ Auto-committing hashes back to your `.qmd`
+- ✅ Rendering the button in the published chapter
+
+### Data Organization
+
+Put chapter-specific data in `data/<your_chapter>/`:
+
+```
+UN-Handbook/
+├── ct_chile.qmd
+└── data/
+    └── ct_chile/
+        ├── training_points.rds
+        ├── rf_model.rds
+        └── roi_boundary.gpkg
+```
+
+The CI pipeline automatically packages this into an OCI artifact.
+
+## Testing
+
+You can test the extension locally:
+
+```bash
+# Render this example
+quarto render example.qmd
+
+# Run the full test suite
+bash test.sh
+```
+
+## Installation
+
+To use this extension in your Quarto project:
+
+```bash
+quarto add un-handbook/reproducible
+```
+
+Or install from a specific version:
+
+```bash
+quarto add un-handbook/reproducible@v1.0.0
+```
+
+## Architecture
+
+This extension is **Component #4** of a 5-component reproducible analysis system:
+
+**Build-Time**:
+1. Portable CI Pipeline (Dagger) - Builds images and data artifacts
+2. Curated Compute Images - Pre-built Docker images with R/Python
+3. OCI Data Artifacts - Content-hashed data snapshots
+
+**Run-Time**:
+4. **"Reproduce" Button (This Extension)** - User's entrypoint
+5. "Chapter Session" Helm Chart - Kubernetes deployment
+
+## Learn More
+
+- **Documentation**: See `CLAUDE.md`, `USER_JOURNEY.md`, `IMPLEMENTATION_APPROACH.md`
+- **Tests**: See `test-examples/` for 7 test cases
+- **Source Code**: `_extensions/reproducible/reproducible.lua`
+
+---
+
+**Status**: POC v0.1.0 - Initial implementation with test-driven development

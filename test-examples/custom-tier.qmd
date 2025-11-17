@@ -1,0 +1,20 @@
+---
+title: "Custom Tier Test"
+format: html
+filters:
+  - ../reproducible
+reproducible:
+  enabled: true
+  tier: gpu
+  estimated-runtime: "2 hours"
+---
+
+# Test Content
+
+This chapter uses GPU tier for deep learning workloads.
+
+Expected behavior:
+- Button should appear
+- Tier: gpu (8 CPU, 32GB RAM, 1 GPU)
+- Runtime display: "2 hours"
+- URL contains tier=«gpu»

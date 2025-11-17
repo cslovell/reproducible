@@ -1,0 +1,25 @@
+---
+title: "Full Metadata Test"
+format: html
+filters:
+  - ../reproducible
+reproducible:
+  enabled: true
+  tier: heavy
+  image-flavor: gpu
+  data-snapshot: sha256-abc123def456
+  estimated-runtime: "45 minutes"
+  storage-size: "50Gi"
+---
+
+# Test Content
+
+This test specifies all available options to verify that custom configuration works.
+
+Expected behavior:
+- Button should appear
+- Tier: heavy (10 CPU, 48GB RAM)
+- Image flavor: gpu
+- Version: sha256-abc123def456 (in URL)
+- Runtime display: "45 minutes"
+- Storage: 50Gi

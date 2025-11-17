@@ -1,0 +1,19 @@
+---
+title: "Special Characters Test"
+format: html
+filters:
+  - ../reproducible
+reproducible:
+  enabled: true
+  data-snapshot: "v1.2.3-beta+build.456"
+---
+
+# Test Content
+
+This chapter has special characters in the version string to test URL encoding.
+
+Expected behavior:
+- Button should appear
+- Version should be normalized (dots → hyphens): v1-2-3-beta+build.456
+- Special characters (+ and .) should be URL-encoded in the final URL
+- Generated URL should be valid

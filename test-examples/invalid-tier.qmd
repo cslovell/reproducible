@@ -1,0 +1,19 @@
+---
+title: "Invalid Tier Test"
+format: html
+filters:
+  - ../reproducible
+reproducible:
+  enabled: true
+  tier: super-heavy  # Invalid tier name!
+---
+
+# Test Content
+
+This chapter has an invalid tier value to test error handling.
+
+Expected behavior:
+- Button should appear (graceful degradation)
+- Should fall back to default tier: medium
+- Quarto should emit a warning about invalid tier
+- URL contains tier=«medium»

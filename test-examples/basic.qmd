@@ -1,0 +1,18 @@
+---
+title: "Basic Test Chapter"
+format: html
+filters:
+  - ../reproducible
+reproducible:
+  enabled: true
+---
+
+# Test Content
+
+This is a basic test with minimal configuration. Only `enabled: true` is specified, all other values should use defaults.
+
+Expected behavior:
+- Button should appear
+- Default tier: medium
+- Chapter name: basic (from filename)
+- Default storage: 20Gi
