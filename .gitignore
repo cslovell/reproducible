@@ -6,6 +6,12 @@
 # Test outputs
 test-outputs/
 
+# Playwright
+/node_modules/
+/test-results/
+/playwright-report/
+/playwright/.cache/
+
 # macOS
 .DS_Store
 
@@ -19,3 +25,7 @@ test-outputs/
 # Temporary files
 *.tmp
 *.bak
+
+# Package lock files (keep package.json, ignore lock for now)
+package-lock.json
+npm-debug.log*
