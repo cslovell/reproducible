@@ -268,3 +268,6 @@ function Meta(meta)
 
   return meta
 end
+
+-- Export the filter
+return {{Meta = Meta}}

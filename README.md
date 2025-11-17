@@ -2,7 +2,7 @@
 
 A Quarto extension that generates "Reproducible Environment" buttons for launching one-click, pre-configured JupyterLab environments on Onyxia platforms (such as the UN Global Platform).
 
-**Version:** 0.1.0
+**Version:** 0.1.1
 **Requirements:** Quarto >= 1.3.0
 
 ## Overview
@@ -23,7 +23,7 @@ This extension enables handbook authors to add reproducibility to their chapters
 Install in your Quarto project:
 
 ```bash
-quarto add un-handbook/reproducible
+quarto add cslovell/reproducible
 ```
 
 Or install from a local directory:
@@ -41,7 +41,7 @@ project:
   type: book  # or website, default, etc.
 
 filters:
-  - reproducible
+  - cslovell/reproducible
 
 format:
   html:
@@ -101,7 +101,7 @@ project:
   type: book
 
 filters:
-  - reproducible
+  - cslovell/reproducible
 
 reproducible-config:
   onyxia:
@@ -261,7 +261,7 @@ project:
   type: book
 
 filters:
-  - reproducible
+  - cslovell/reproducible
 ```
 
 **Chapter (chapter.qmd):**
@@ -287,7 +287,7 @@ project:
   type: book
 
 filters:
-  - reproducible
+  - cslovell/reproducible
 
 reproducible-config:
   onyxia:
@@ -443,7 +443,7 @@ Version strings are normalized for URL compatibility:
    - Check: `quarto render --to html`
 
 3. **Extension not installed**
-   - Solution: Run `quarto add un-handbook/reproducible`
+   - Solution: Run `quarto add cslovell/reproducible`
    - Verify: Check `_extensions/reproducible/` directory exists
 
 4. **Syntax error in YAML**
@@ -551,44 +551,48 @@ reproducible:
 3. For persistent issues, reinstall extension:
    ```bash
    quarto remove reproducible
-   quarto add un-handbook/reproducible
+   quarto add cslovell/reproducible
    ```
 
 ---
 
 ## Development & Testing
 
-### Running Tests
+### Comprehensive Test Suite
 
-The extension includes an end-to-end test suite:
+The extension includes a comprehensive Playwright E2E test suite with 200+ tests across multiple browsers:
+
+```bash
+# Run full test suite (Chromium, Firefox, WebKit)
+npm test
+
+# Run tests in UI mode (interactive)
+npm run test:ui
+
+# Run tests in debug mode
+npm run test:debug
+```
+
+**Test Coverage:**
+- ✅ **Filter Registration** (11 tests) - Verifies filter loads and executes
+- ✅ **URL Generation** (8 tests) - Deep-link parameter encoding
+- ✅ **Configuration** (11 tests) - Multi-level config precedence
+- ✅ **Notice Styles** (9 tests) - Full, minimal, button-only variants
+- ✅ **Metadata Extraction** (15 tests) - Tier, flavor, snapshot handling
+- ✅ **Error Handling** (9 tests) - Graceful degradation
+- ✅ **Accessibility** (6 tests) - ARIA, keyboard nav, contrast
+- ✅ **Visual Regression** (4 tests) - Screenshot comparison
+
+### Quick Bash Tests
+
+For rapid feedback during development:
 
 ```bash
 cd reproducible/
-bash test.sh
+bash tests/bash/test.sh
 ```
 
-This runs 10 test cases covering:
-- Basic configuration
-- Full metadata
-- Disabled chapters
-- Custom tiers
-- Invalid values
-- Custom button text
-- Notice style variants
-
-### Test Structure
-
-```
-test-examples/          # Test input files
-  ├── basic.qmd
-  ├── full-metadata.qmd
-  ├── disabled.qmd
-  ├── custom-button-text.qmd
-  └── ...
-test.sh                 # Test runner
-test-assertions.sh      # Assertion helpers
-test-outputs/           # Generated HTML (gitignored)
-```
+This runs 10 quick smoke tests covering basic scenarios.
 
 ### Manual Testing
 
@@ -679,24 +683,29 @@ This extension is **Component #4** of a 5-component reproducible analysis system
 
 ## Version History
 
-### v0.2.0 (Current)
+### v0.1.1 (Current)
 
-- Added comprehensive configuration system
-- Support for three notice styles (full, minimal, button-only)
+**Bug Fixes:**
+- Fixed critical bug: Missing `return {{Meta = Meta}}` in Lua filter that prevented filter execution
+- Updated documentation filter references from `- reproducible` to `- cslovell/reproducible`
+- Fixed README installation instructions
+
+**Testing:**
+- Added 11 new regression tests for filter registration and validation
+- Added source code validation tests to prevent filter export bugs
+- Total test coverage: 210+ tests across 3 browsers (Chromium, Firefox, WebKit)
+
+### v0.1.0
+
+**Initial Release:**
+- Comprehensive configuration system
+- Three notice styles (full, minimal, button-only)
 - Configurable Onyxia deployment (URL, catalog, chart)
 - Customizable button text and branding
 - Project-level configuration via `reproducible-config`
 - Document-level UI overrides
-- 10 end-to-end tests
-- Full backward compatibility with v0.1.x
-
-### v0.1.0
-
-- Initial proof-of-concept implementation
-- Basic button generation with hard-coded values
-- Document-level configuration only
-- Single notice style
-- 7 end-to-end tests
+- Complete Playwright E2E test suite
+- Accessibility and visual regression tests
 
 ---
 

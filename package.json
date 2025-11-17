@@ -1,6 +1,6 @@
 {
   "name": "reproducible-button-extension",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Quarto extension for generating reproducible environment buttons with Onyxia deep-links",
   "private": true,
   "scripts": {

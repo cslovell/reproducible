@@ -206,34 +206,127 @@ npx playwright test visual/ --update-snapshots
 
 ## Release Process
 
-For maintainers releasing new versions:
+For maintainers releasing new versions.
 
-1. **Update version:**
-   - `_extension.yml`
-   - `package.json`
-   - `README.md`
+### Version Management
+
+**All version numbers must be updated in these 3 files:**
+
+1. `_extensions/reproducible/_extension.yml` (line 3)
+   ```yaml
+   version: 0.x.x
+   ```
+
+2. `package.json` (line 3)
+   ```json
+   "version": "0.x.x",
+   ```
+
+3. `README.md` (line 5)
+   ```markdown
+   **Version:** 0.x.x
+   ```
+
+**Versioning scheme:** Follow [Semantic Versioning](https://semver.org/)
+- **MAJOR.MINOR.PATCH** (e.g., 0.1.1)
+- **MAJOR**: Breaking changes (e.g., 1.0.0)
+- **MINOR**: New features, backward compatible (e.g., 0.2.0)
+- **PATCH**: Bug fixes, backward compatible (e.g., 0.1.1)
+
+### Standard Release Process
+
+1. **Update all version numbers** (see above - 3 files)
 
 2. **Update CHANGELOG.md:**
    - Move [Unreleased] items to new version section
    - Add release date
+   - Follow existing format
 
-3. **Commit and tag:**
+3. **Run full test suite:**
    ```bash
-   git add -A
-   git commit -m "Release v0.x.0"
-   git tag -a v0.x.0 -m "Release v0.x.0"
+   npm test
+   ```
+   Ensure all 210+ tests pass before proceeding.
+
+4. **Commit changes:**
+   ```bash
+   git add _extensions/reproducible/_extension.yml package.json README.md CHANGELOG.md
+   git commit -m "Release v0.x.x"
    ```
 
-4. **Push:**
+5. **Create and push tag:**
    ```bash
+   git tag v0.x.x
    git push origin main
-   git push origin v0.x.0
+   git push origin v0.x.x
    ```
 
-5. **Create GitHub Release:**
-   - Use tag v0.x.0
-   - Copy CHANGELOG content
-   - Attach any artifacts if needed
+6. **Create GitHub Release:**
+   ```bash
+   gh release create v0.x.x --title "v0.x.x - [Title]" --notes "[Release notes]"
+   ```
+
+   Or use GitHub web interface:
+   - Go to https://github.com/cslovell/reproducible/releases/new
+   - Select tag v0.x.x
+   - Copy CHANGELOG content as release notes
+   - Publish release
+
+### Correcting a Released Tag
+
+If you need to update a tag after release (e.g., forgot to update version files):
+
+1. **Make necessary changes** (update version files, etc.)
+
+2. **Commit changes:**
+   ```bash
+   git add [modified files]
+   git commit --amend --no-edit  # Amend if tag not pushed yet
+   # OR
+   git commit -m "Update version numbers for v0.x.x"
+   ```
+
+3. **Delete old tag locally and remotely:**
+   ```bash
+   git tag -d v0.x.x
+   git push origin :refs/tags/v0.x.x
+   ```
+
+4. **Create new tag:**
+   ```bash
+   git tag v0.x.x
+   ```
+
+5. **Force push the tag:**
+   ```bash
+   git push origin main  # Push commit first
+   git push origin v0.x.x --force  # Then force push tag
+   ```
+
+6. **Update GitHub Release:**
+   - Delete the old release (or edit it)
+   - Create new release with updated tag
+   - Or use `gh release delete v0.x.x` then recreate
+
+### Pre-Release Checklist
+
+Before creating any release, verify:
+
+- [ ] All 3 version files updated with same version number
+- [ ] CHANGELOG.md updated with release notes
+- [ ] All tests passing (`npm test`)
+- [ ] No uncommitted changes
+- [ ] On main branch
+- [ ] Git status clean
+
+### Post-Release Checklist
+
+After release is published:
+
+- [ ] Tag visible at https://github.com/cslovell/reproducible/tags
+- [ ] Release visible at https://github.com/cslovell/reproducible/releases
+- [ ] Version in _extension.yml matches tag
+- [ ] Installation works: `quarto add cslovell/reproducible`
 
 ## Getting Help
 
