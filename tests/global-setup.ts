@@ -13,7 +13,7 @@ export default async function globalSetup() {
   console.log('==========================================\n');
 
   const rootDir = path.resolve(__dirname, '..');
-  const testExamplesDir = path.join(rootDir, 'test-examples');
+  const testExamplesDir = path.join(rootDir, 'tests', 'bash', 'examples');
   const outputDir = path.join(rootDir, 'test-outputs');
 
   // Create output directory
