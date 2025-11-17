@@ -1,8 +1,6 @@
 ---
 title: "Invalid Tier Test"
 format: html
-filters:
-  - ../reproducible
 reproducible:
   enabled: true
   tier: super-heavy  # Invalid tier name!

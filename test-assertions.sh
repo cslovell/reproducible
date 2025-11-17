@@ -18,14 +18,29 @@ render_test() {
   local output_name=$(basename "$input" .qmd)
   local output="test-outputs/${output_name}.html"
 
-  echo -n "  Rendering ${input}... "
+  echo -n "  Rendering ${input}... " >&2
 
-  if quarto render "$input" --output "$output" --quiet 2>&1 > /dev/null; then
-    echo -e "${GREEN}✓${NC}"
-    echo "$output"
-    return 0
+  # Render (quietly, but preserve exit code)
+  if quarto render "$input" --quiet > /dev/null 2>&1; then
+    # Move generated HTML to test-outputs
+    local input_dir=$(dirname "$input")
+    local generated_html="${input_dir}/${output_name}.html"
+    if [ -f "$generated_html" ]; then
+      mv "$generated_html" "$output"
+      # Also clean up _files directory if it exists
+      local files_dir="${input_dir}/${output_name}_files"
+      if [ -d "$files_dir" ]; then
+        rm -rf "$files_dir"
+      fi
+      echo -e "${GREEN}✓${NC}" >&2
+      echo "$output"  # Only output path to stdout
+      return 0
+    else
+      echo -e "${RED}✗ (output not found at $generated_html)${NC}" >&2
+      return 1
+    fi
   else
-    echo -e "${RED}✗ (render failed)${NC}"
+    echo -e "${RED}✗ (render failed)${NC}" >&2
     return 1
   fi
 }

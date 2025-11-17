@@ -1,8 +1,6 @@
 ---
 title: "Special Characters Test"
 format: html
-filters:
-  - ../reproducible
 reproducible:
   enabled: true
   data-snapshot: "v1.2.3-beta+build.456"

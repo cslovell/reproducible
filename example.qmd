@@ -2,8 +2,7 @@
 title: "Reproducible Analysis Button - Example"
 subtitle: "Demo of the Quarto Extension for UN Handbook"
 format: html
-filters:
-  - reproducible
+engine: markdown
 reproducible:
   enabled: true
   tier: medium

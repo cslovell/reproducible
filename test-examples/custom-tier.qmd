@@ -1,8 +1,6 @@
 ---
 title: "Custom Tier Test"
 format: html
-filters:
-  - ../reproducible
 reproducible:
   enabled: true
   tier: gpu

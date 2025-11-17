@@ -1,8 +1,6 @@
 ---
 title: "No Metadata Test"
 format: html
-filters:
-  - ../reproducible
 ---
 
 # Test Content

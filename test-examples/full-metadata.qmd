@@ -1,8 +1,6 @@
 ---
 title: "Full Metadata Test"
 format: html
-filters:
-  - ../reproducible
 reproducible:
   enabled: true
   tier: heavy

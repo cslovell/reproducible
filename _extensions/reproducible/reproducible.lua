@@ -167,9 +167,8 @@ function Meta(meta)
   -- Generate HTML
   local html = generate_button_html(url, meta.reproducible)
 
-  -- Inject into document (at top of body)
-  local button = pandoc.RawBlock('html', html)
-  table.insert(quarto.doc.body.blocks, 1, button)
+  -- Inject into document (before body content)
+  quarto.doc.include_text("before-body", html)
 
   return meta
 end
