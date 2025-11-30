@@ -13,8 +13,8 @@ contributes:
         # Onyxia deployment settings
         onyxia:
           base-url: "https://datalab.officialstatistics.org"
-          catalog: "handbook"
-          chart: "chapter-session"
+          catalog: "unglobalplatform"
+          chart: "eostat"
           auto-launch: true
 
         # UI customization
