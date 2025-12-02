@@ -25,7 +25,9 @@ test.describe('Notice Styles', () => {
       await page.goto('file://' + path.resolve(__dirname, '../../test-outputs/basic.html'));
 
       const notice = page.locator('.reproducible-notice.full');
-      await expect(notice).toHaveClass(/reproducible-notice full/);
+      // Use separate checks to be order-agnostic
+      await expect(notice).toHaveClass(/reproducible-notice/);
+      await expect(notice).toHaveClass(/full/);
     });
 
     test('should apply branding colors to button', async ({ page }) => {

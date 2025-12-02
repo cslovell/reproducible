@@ -5,6 +5,19 @@ All notable changes to the Reproducible Analysis Button extension will be docume
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.3] - 2025-12-02
+
+### Changed
+
+- Service name prefix changed from "chapter-" to "eostat-" for better differentiation in Onyxia UI
+- Updated Lua fallback defaults for catalog ("capacity") and chart ("eostat") to match extension config
+
+### Fixed
+
+- `name` parameter no longer wrapped in guillemet delimiters (displayed correctly in Onyxia UI)
+
+---
+
 ## [0.1.2] - 2025-12-02
 
 ### Changed

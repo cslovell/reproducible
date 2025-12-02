@@ -15,6 +15,10 @@ test.describe('URL Generation', () => {
     expect(href).toContain('/launcher/');
     expect(href).toContain(DEFAULT_CONFIG.onyxia.catalog);
     expect(href).toContain(DEFAULT_CONFIG.onyxia.chart);
+
+    // Raw string assertions to verify URL format independent of parser
+    expect(href).toContain('tier=«medium»');
+    expect(href).toContain('autoLaunch=true');
   });
 
   test('should encode string parameters with guillemet delimiters', async ({ page }) => {
@@ -105,5 +109,17 @@ test.describe('URL Generation', () => {
 
     const button = page.locator('.reproducible-notice a');
     await expect(button).toHaveAttribute('target', '_blank');
+  });
+
+  test('should format name parameter correctly (no guillemets, eostat prefix)', async ({ page }) => {
+    await page.goto('file://' + path.resolve(__dirname, '../../test-outputs/basic.html'));
+
+    const button = page.locator('.reproducible-notice a');
+    const href = await button.getAttribute('href');
+    const parser = new OnyxiaUrlParser(href!);
+
+    // name should NOT be wrapped in «» and should use eostat- prefix
+    expect(parser.isStringEncoded('name')).toBe(false);
+    expect(parser.getParam('name')).toBe('eostat-basic');
   });
 });

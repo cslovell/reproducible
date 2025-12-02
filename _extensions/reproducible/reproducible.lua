@@ -18,6 +18,15 @@ local function get_config(meta)
   }
 end
 
+-- URL encode only (no guillemet wrapping) - for display names like service name
+local function url_encode(value)
+  if value == nil then return "" end
+  local str = tostring(value)
+  return str:gsub("([^%w%-%.%_%~])", function(c)
+    return string.format("%%%02X", string.byte(c))
+  end)
+end
+
 -- Encode values for Onyxia URL parameters
 -- Numbers/booleans pass as-is, strings are URL-encoded and wrapped in «»
 local function encode_helm_value(value)
@@ -105,8 +114,8 @@ end
 local function build_onyxia_url(meta, config, validated_tier)
   -- Get Onyxia deployment settings from config
   local base_url = get_meta_string(config.onyxia, "base-url", "https://datalab.officialstatistics.org")
-  local catalog = get_meta_string(config.onyxia, "catalog", "handbook")
-  local chart = get_meta_string(config.onyxia, "chart", "chapter-session")
+  local catalog = get_meta_string(config.onyxia, "catalog", "capacity")
+  local chart = get_meta_string(config.onyxia, "chart", "eostat")
   local auto_launch = config.onyxia["auto-launch"]
   if auto_launch == nil then auto_launch = true end
 
@@ -125,7 +134,7 @@ local function build_onyxia_url(meta, config, validated_tier)
   -- Build parameters (use validated_tier passed from Meta())
   local params = {
     "autoLaunch=" .. tostring(auto_launch),
-    "name=" .. encode_helm_value("chapter-" .. chapter_name),
+    "name=" .. url_encode("eostat-" .. chapter_name),
     "tier=" .. encode_helm_value(validated_tier),
     "imageFlavor=" .. encode_helm_value(image_flavor),
     "chapter.name=" .. encode_helm_value(chapter_name),

@@ -1,6 +1,5 @@
 import { test, expect } from '@playwright/test';
 import path from 'path';
-import { OnyxiaUrlParser } from '../fixtures/test-helpers';
 
 test.describe('Error Handling', () => {
   test.describe('Disabled Feature', () => {
@@ -44,10 +43,10 @@ test.describe('Error Handling', () => {
 
       const button = page.locator('.reproducible-notice a');
       const href = await button.getAttribute('href');
-      const parser = new OnyxiaUrlParser(href!);
 
-      // Should fallback to medium
-      expect(parser.getDecodedParam('tier')).toBe('medium');
+      // Check raw string to verify generator sanitized the URL (not parser)
+      expect(href).toContain('tier=«medium»');
+      expect(href).not.toContain('tier=«invalid');
     });
 
     test('should display medium tier label for invalid tier', async ({ page }) => {

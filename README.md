@@ -2,7 +2,7 @@
 
 A Quarto extension that generates "Reproducible Environment" buttons for launching one-click, pre-configured JupyterLab environments on Onyxia platforms (such as the UN Global Platform).
 
-**Version:** 0.1.2
+**Version:** 0.1.3
 **Requirements:** Quarto >= 1.3.0
 
 ## Overview
