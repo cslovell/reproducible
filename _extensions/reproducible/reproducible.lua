@@ -115,7 +115,7 @@ local function build_onyxia_url(meta, config, validated_tier)
   -- Get Onyxia deployment settings from config
   local base_url = get_meta_string(config.onyxia, "base-url", "https://datalab.officialstatistics.org")
   local catalog = get_meta_string(config.onyxia, "catalog", "capacity")
-  local chart = get_meta_string(config.onyxia, "chart", "eostat")
+  local chart = get_meta_string(config.onyxia, "chart", "eostat-rstudio")
   local auto_launch = config.onyxia["auto-launch"]
   if auto_launch == nil then auto_launch = true end
 

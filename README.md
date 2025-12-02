@@ -2,7 +2,7 @@
 
 A Quarto extension that generates "Reproducible Environment" buttons for launching one-click, pre-configured JupyterLab environments on Onyxia platforms (such as the UN Global Platform).
 
-**Version:** 0.1.3
+**Version:** 0.1.4
 **Requirements:** Quarto >= 1.3.0
 
 ## Overview
@@ -81,7 +81,7 @@ The extension provides sensible defaults for the UN Global Platform deployment. 
 Default settings include:
 - Onyxia URL: `https://datalab.officialstatistics.org`
 - Helm catalog: `capacity`
-- Helm chart: `eostat`
+- Helm chart: `eostat-rstudio`
 - Button text: "Launch Environment"
 - Notice style: Full (title + button + metadata)
 - Branding: Onyxia colors (orange/black)

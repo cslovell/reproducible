@@ -7,7 +7,7 @@ export const DEFAULT_CONFIG = {
   onyxia: {
     baseUrl: 'https://datalab.officialstatistics.org',
     catalog: 'capacity',
-    chart: 'eostat',
+    chart: 'eostat-rstudio',
     autoLaunch: true,
   },
   ui: {
